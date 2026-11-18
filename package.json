@@ -1,0 +1,11 @@
+{
+  "name": "vice-meridian",
+  "version": "1.0.0",
+  "description": "1980s Miami Vice open-world crime sandbox on three.js — make.fun bounty gta6-01 entry",
+  "private": true,
+  "scripts": {
+    "serve": "node serve.ts",
+    "shoot": "mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts"
+  },
+  "engines": { "node": ">=22" }
+}

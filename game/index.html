@@ -3,17 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Block Dodger</title>
+<title>Vice Meridian — open-world crime sandbox</title>
 <style>
-  html, body { margin: 0; height: 100%; overflow: hidden; background: #11141b; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #0b0e17; }
   #game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
   /* Read aloud, never shown: the status line screen readers announce. */
   #status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  /* Small, always-visible control reminder so the first frame isn't a mystery. */
+  #hint { position: fixed; left: 50%; transform: translateX(-50%); bottom: 10px; font-size: 12px; opacity: 0.8; text-shadow: 0 2px 4px #000; white-space: nowrap; letter-spacing: 0.06em; }
 </style>
+<script type="importmap">{ "imports": { "three": "./vendor/three.module.min.js" } }</script>
 </head>
 <body>
-<canvas id="game" aria-label="Block Dodger: move the paddle left and right to dodge falling blocks and catch coins"></canvas>
+<canvas id="game" aria-label="Vice Meridian: an open-world crime sandbox. Drive with WASD, boost with Shift, handbrake with Space, orbit the chase camera by dragging the mouse."></canvas>
 <p id="status" role="status" aria-live="polite"></p>
+<p id="hint">WASD drive · Shift boost · Space handbrake · mouse drag orbits · H horn</p>
 <script type="module" src="./src/main.js"></script>
 </body>
 </html>

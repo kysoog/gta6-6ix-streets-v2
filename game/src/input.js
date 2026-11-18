@@ -1,53 +1,52 @@
-// Keyboard and pointer input. Held keys give a steering direction; one-shot presses (start or
-// restart, pause) are queued as bit flags and taken once by the loop, so a press between two
-// frames is never lost and never counted twice.
+// Vice Meridian — input: WASD/arrows drive, Shift boosts, Space handbrake. Mouse drag orbits
+// the chase camera around the car; the camera settles back behind the car with lag when released.
 
-export const ACTION_CONFIRM = 1;
-export const ACTION_PAUSE = 2;
+export function createInput() {
+  const state = {
+    forward: false, back: false, left: false, right: false, run: false,
+    handbrake: false, horn: false,
+    justHorn: false,
+    camYaw: 0, camPitch: 0, pointerLocked: false,
+    orbitX: 0, justOrbit: false,
+  };
+  let mouseX = 0, mouseY = 0;
+  let orbitDrag = false;
 
-const LEFT = new Set(['ArrowLeft', 'KeyA']);
-const RIGHT = new Set(['ArrowRight', 'KeyD']);
-const CONFIRM = new Set(['Space', 'Enter']);
-const PAUSE = new Set(['KeyP', 'Escape']);
+  function onKey(event, pressed) {
+    const code = event.code;
+    switch (code) {
+      case 'KeyW': case 'ArrowUp': state.forward = pressed; break;
+      case 'KeyS': case 'ArrowDown': state.back = pressed; break;
+      case 'KeyA': case 'ArrowLeft': state.left = pressed; break;
+      case 'KeyD': case 'ArrowRight': state.right = pressed; break;
+      case 'ShiftLeft': case 'ShiftRight': state.run = pressed; break;
+      case 'Space': state.handbrake = pressed; break;
+      case 'KeyH': state.horn = pressed; if (pressed) state.justHorn = true; break;
+      default:
+    }
+  }
+  window.addEventListener('keydown', (e) => onKey(e, true));
+  window.addEventListener('keyup', (e) => onKey(e, false));
 
-export function createInput(target) {
-  let left = false;
-  let right = false;
-  let actions = 0;
-
-  window.addEventListener('keydown', (event) => {
-    if (LEFT.has(event.code)) left = true;
-    else if (RIGHT.has(event.code)) right = true;
-    else if (CONFIRM.has(event.code)) {
-      if (!event.repeat) actions |= ACTION_CONFIRM;
-    } else if (PAUSE.has(event.code)) {
-      if (!event.repeat) actions |= ACTION_PAUSE;
-    } else return;
-    event.preventDefault();
-  });
-  window.addEventListener('keyup', (event) => {
-    if (LEFT.has(event.code)) left = false;
-    else if (RIGHT.has(event.code)) right = false;
-  });
-  // A key released while the tab is hidden never sends keyup: let go of everything on blur.
-  window.addEventListener('blur', () => {
-    left = false;
-    right = false;
-  });
-  target.addEventListener('pointerdown', () => {
-    actions |= ACTION_CONFIRM;
+  window.addEventListener('mousedown', (e) => { if (e.button === 0) orbitDrag = true; });
+  window.addEventListener('mouseup', () => { orbitDrag = false; state.justOrbit = false; });
+  window.addEventListener('mousemove', (e) => {
+    mouseX += e.movementX;
+    mouseY += e.movementY;
   });
 
+  const sensitivity = 0.0015;
   return {
-    /** -1 for left, 1 for right, 0 for neither or both. */
-    direction() {
-      return (right ? 1 : 0) - (left ? 1 : 0);
+    read() {
+      state.camYaw -= mouseX * sensitivity;
+      state.camPitch = Math.max(-Math.PI / 2 + 0.1, Math.min(Math.PI / 2 - 0.1, state.camPitch - mouseY * sensitivity));
+      mouseX = 0; mouseY = 0;
+      state.justHorn = false;
+      const result = { ...state, justOrbit: orbitDrag };
+      if (orbitDrag) state.justOrbit = true;
+      return result;
     },
-    /** The one-shot presses since the last call, as ACTION_* flags. */
-    takeActions() {
-      const taken = actions;
-      actions = 0;
-      return taken;
-    },
+    get state() { return state; },
+    isOrbitDragging() { return orbitDrag; },
   };
 }
